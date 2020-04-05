@@ -4,118 +4,151 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ConsoleApp1
+namespace ConsoleApp2
 {
     class Program
     {
         static void Main(string[] args)
         {
-            Console.Clear();
-            const int n = 36;
-            const int theirmax = 16;
-            Card[] a = new Card[n];
-            byte[] val = { 6, 7, 8, 9, 10, 2, 3, 4, 11 };
-            for (int i = 0; i < n; i++)
+            Console.Write("Write a line ");
+            StringBuilder sb = new StringBuilder(Console.ReadLine());
+            for (bool exit = false; exit == false;)
             {
-                a[i].Rank = RankE.Six+(i / 4);
-                a[i].Suit = (char)(3 + (i % 4));
-                a[i].Value = val[i / 4];
-                a[i].Owner = 0;
-            }
-            string you = "y", them = "y";
-            int their = 0, your = 0;
-            byte counter = 1;
-            do
-            {
-                Random rnd = new Random();
-                if ((you == "y")&&(counter>2))
+                Console.WriteLine(sb.ToString());
+                Console.WriteLine("What would you like to do?");
+                Console.WriteLine("1 - Turn the word order around");
+                Console.WriteLine("2 - Find hex numbers in it");
+                Console.WriteLine("3 - Replace letters after vowels");
+                Console.WriteLine("4 - Exit");
+                int x = Console.Read() - 48;
+                switch (x)
                 {
-                    do
+                    case 1: Turnaround(sb); break;
+                    case 2: Hex(sb); break;
+                    case 3: Replace(sb); break;
+                    case 4: exit = true; break;
+                    default: Console.WriteLine("Well, that was a wrong choice"); break;
+                }
+                Console.In.ReadLine();
+            }
+        }
+
+//------------------------------------------------------------------------------------------------------------------
+
+        static void Turnaround(StringBuilder start)
+        {
+            StringBuilder second = new StringBuilder();
+            int lastSpace = -1;
+            for (int i = 0; i < start.Length; i++)
+                if (start[i] == ' ')
+                {
+                    second.Insert(0, start.ToString(lastSpace + 1, i - lastSpace - 1));
+                    second.Insert(0, " ");
+                    lastSpace = i;
+                }
+            second.Insert(0, start.ToString(lastSpace + 1, start.Length - lastSpace - 1));
+            Console.WriteLine(second);
+        }
+
+        static void Hex(StringBuilder line)
+        {
+            char[] hexNumbers = { '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'a', 'b', 'c', 'd', 'e', 'f', 'A', 'B', 'C', 'D', 'E', 'F', ' ' };
+            byte counting = 1;
+            int lastSpace = -1;
+            int a = 0;
+            for (int i = 0; i < line.Length; i++)
+            {
+                if (counting == 1)
+                {
+                    for (int h = 0; h < hexNumbers.Length; h++)
                     {
-                        Console.Write("\nYour hand is\n");
-                        for (int i = 0; i < n; i++)
+                        if (line[i] == hexNumbers[h])
                         {
-                            if (a[i].Owner > 0)
+                            counting = 1;
+                            h = hexNumbers.Length;
+                        }
+                        else
+                        {
+                            counting = 0;
+                        }
+                    }
+                }
+                if (line[i] == ' ')
+                {
+                    if (counting == 1)
+                    {
+                        a = 0;
+                        for (int j = i - 1; j > lastSpace; j--)
+                        {
+                            if (line[j] < 58)
                             {
-                                Console.Write(a[i].Rank);
-                                Console.Write(a[i].Suit);
+                                a = a + ((int)line[j] - 48) * (int)Math.Pow(16, (i - j - 1));
+                            }
+                            else
+                            {
+                                if (line[j] < 91)
+                                {
+                                    a = a + ((int)line[j] - 55) * (int)Math.Pow(16, (i - j - 1));
+                                }
+                                else
+                                {
+                                    a = a + ((int)line[j] - 87) * (int)Math.Pow(16, (i - j - 1));
+                                }
                             }
                         }
-                        Console.Write("\nTake another card? y/n");
-                        you = Console.ReadLine();
-			Console.Clear();
-                        if ((you != "y") && (you != "n")) Console.Write("\nYou picked the wrong answer, fool!");
+                        line.Remove(lastSpace + 1, i - lastSpace - 1);
+                        Console.WriteLine(line);
+                        line.Insert(lastSpace + 1, a.ToString());
+                        Console.WriteLine(line);
+                        counting = 0;
                     }
-                    while ((you != "y") && (you != "n"));
+                    else
+                        counting = 1;
+                    lastSpace = i;
                 }
-                if (you == "y")
+                if (i == line.Length - 1)
                 {
-                    for (int ownership=1; ownership>0; ownership++)
+                    if (counting == 1)
                     {
-                        int i = rnd.Next(n);
-                        if (a[i].Owner == 0)
+                        for (int j = i; j > lastSpace; j--)
                         {
-                            a[i].Owner = ownership;
-                            your += a[i].Value;
-                            Console.Write("\nYour new Card is ");
-                            Console.Write(a[i].Rank);
-                            Console.Write(a[i].Suit);
-                            ownership = -1;
+                            if (line[j] < 58)
+                                a = a + ((int)line[j] - 48) * (int)Math.Pow(16, (i - j));
+                            else
+                                if (line[j] < 91)
+                                a = a + ((int)line[j] - 55) * (int)Math.Pow(16, (i - j));
+                            else
+                                a = a + ((int)line[j] - 87) * (int)Math.Pow(16, (i - j));
+                        }
+                        line.Remove(lastSpace + 1, i - lastSpace);
+                        Console.WriteLine(line);
+                        line.Insert(lastSpace + 1, a.ToString());
+                        Console.WriteLine(line);
+                        counting = 0;
+                    }
+                }
+            }
+            Console.WriteLine(line);
+        }
+
+
+        static void Replace(StringBuilder what)
+        {
+            char[] vowels = { 'a', 'e', 'i', 'o', 'u', 'y', 'A', 'E', 'I', 'O', 'U', 'Y' };
+            for (int i = 0; i < what.Length - 1; i++)
+            {
+                for (int j = 0; j < vowels.Length; j++)
+                {
+                    if (what[i] == vowels[j])
+                    {
+                        if (what[i + 1] != ' ')
+                        {
+                            what[i + 1] = (char)(((what[i + 1] == 'z') || (what[i + 1] == 'Z')) ? what[i + 1] - 25 : what[i + 1] + 1);
                         }
                     }
                 }
-                if (them == "y")
-                {
-                    for (int ownership = -1; ownership < 0; ownership--)
-                    {
-                        int i;
-                        i = rnd.Next(n);
-                        if (a[i].Owner == 0)
-                        {
-                            a[i].Owner = ownership;
-                            their += a[i].Value;
-                            ownership = 1;
-                        }
-                    }
-                    if ((their >= theirmax) && (counter > 2)) them = "n";
-                    counter++;
-                }
-            } while ((you == "y") || (them == "y"));
-            Console.Write("\nCards open");
-            Console.Write("\nYour hand is\n");
-            for (int i = 0; i < n; i++)
-            {
-                if (a[i].Owner > 0)
-                {
-                    Console.Write(a[i].Rank);
-                    Console.Write(a[i].Suit);
-                }
             }
-            Console.Write("\nTheir hand is\n");
-            for (int i = 0; i < n; i++)
-            {
-                if (a[i].Owner < 0)
-                {
-                    Console.Write(a[i].Rank);
-                    Console.Write(a[i].Suit);
-                }
-            }
-            Console.Write("\nTheir final score ");
-            Console.Write(their);
-            Console.Write("\nYour final score ", your);
-            Console.Write(your);
-            if ((their == your) || ((their > 21) && (your > 21))) Console.Write("\nDraw");
-            else
-            {
-                if ((their > your) || (your > 21))
-                    if (their>21) Console.Write("\nYou win");
-                    else Console.Write("\nYou lose");
-                else
-                if ((their < your) || (their > 21))
-                    if (your > 21) Console.Write("\nYou lose");
-                    else Console.Write("\nYou win");
-            }
-            Console.ReadKey();
+            Console.WriteLine(what);
         }
     }
 }
